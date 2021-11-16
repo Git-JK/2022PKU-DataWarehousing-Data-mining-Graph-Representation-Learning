@@ -4,6 +4,7 @@ import torch
 import os
 import numpy as np
 import pandas as pd
+from torch._C import Graph
 
 class CoraDataset(DGLDataset):
     def __init__(self):
