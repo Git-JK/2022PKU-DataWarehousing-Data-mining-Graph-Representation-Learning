@@ -167,3 +167,18 @@ class ActorDataset(DGLDataset):
         return self.graph
     def __len__(self):
         return 1
+    
+def dataset(name):
+    if name == "cora":
+        return CoraDataset()
+    elif name == 'chameleon':
+        return ChameleonDataset()
+    elif name == "actor":
+        return ActorDataset()
+    else:
+        raise ValueError("dataset name should be explicit")
+    
+if __name__ == "__main__":
+    print(CoraDataset()[0])
+    print(ChameleonDataset()[0])
+    print(ActorDataset()[0])
