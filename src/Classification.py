@@ -14,6 +14,7 @@ from DatasetProcess import dataset
 from torch.optim import AdamW
 from tqdm import tqdm
 
+
 class NodeDataset(Dataset):
     def __init__(self, graph, mode="train"):
         train_mask = graph.ndata["train_mask"]
@@ -58,15 +59,19 @@ class NodeClassification(nn.Module):
         
         return prob
 
+
 def evaluate(test_nodes_loader, model):
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
     model.eval()
     
     predict_all = np.array([], dtype=int)
     labels_all = np.array([], dtype=int)
 
     for i, (batch_nodes, batch_labels) in enumerate(test_nodes_loader):
-        batch_nodes = batch_nodes.cuda().long()
-        batch_labels = batch_labels.cuda().long()
+        batch_nodes = batch_nodes.to(device).long()
+        batch_labels = batch_labels.to(device).long()
         
         logit = model(batch_nodes)
         probs = torch.sigmoid(logit)
@@ -78,12 +83,18 @@ def evaluate(test_nodes_loader, model):
     f1_score = metrics.f1_score(labels_all, predict_all, average="macro")
     return f1_score
 
+
 def classification(config, dataset_name):
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
     os.environ["CUDA_VISIBLE_DEVICES"] = config.gpu
     os.environ["KERAS_BACKEND"]="pytorch"
     torch.backends.cudnn.benchmark = True
-    
+
     param = torch.load(config.save_path)
+    # param = torch.load(config.save_path, map_location='cpu')
+
     emb = param['v_embeddings.weight']
     graph = dataset(dataset_name)[0]
     train_nodes_dataset = NodeDataset(graph, "train")
@@ -94,10 +105,12 @@ def classification(config, dataset_name):
     val_nodes_loader = DataLoader(val_nodes_dataset, batch_size=config.batch_size, shuffle=True, num_workers=4)
     
     model = NodeClassification(emb, num_class=config.num_class)
-    model.cuda()
+    model.to(device)
     classifier_path = "./out/" + dataset_name + "/" + dataset_name + "_deepwalk_classification_ckpt"
     if os.path.exists(classifier_path):
         model.load_state_dict(torch.load(classifier_path))
+        # model.load_state_dict(torch.load(classifier_path, map_location='cpu'))
+
     else:
         optimizer = AdamW(model.parameters(), lr=float(config.lr), betas=(0.9, 0.999), eps=1e-08, weight_decay=0.01, amsgrad=False)
         loss_func = nn.BCEWithLogitsLoss()
@@ -109,8 +122,8 @@ def classification(config, dataset_name):
             model.train()
             tqdm_bar = tqdm(train_nodes_loader, desc="Training epoch{epoch}".format(epoch=epoch))
             for i, (batch_nodes, batch_labels) in enumerate(tqdm_bar):
-                batch_nodes = batch_nodes.cuda().long()
-                batch_labels = batch_labels.cuda().long()
+                batch_nodes = batch_nodes.to(device).long()
+                batch_labels = batch_labels.to(device).long()
                 
                 model.zero_grad()
                 logit = model(batch_nodes)
@@ -130,6 +143,7 @@ def classification(config, dataset_name):
     f1 = evaluate(test_nodes_loader, model)
     print("Testing dataset: f1 = %.4f"%(f1))
 
+
 if __name__ == "__main__":
     class ConfigClass():
         def __init__(self, save_path):
@@ -141,5 +155,3 @@ if __name__ == "__main__":
             self.save_path = save_path
     config = ConfigClass("./out/actor/actor_deepwalk_ckpt")
     classification(config, "actor")
-    
-    

@@ -72,7 +72,7 @@ class CollateFunction(object):
         return batch_src, batch_dst
     
 class ConfigClass(object):
-    def __init__(self, save_path, lr=0.05,gpu="0"):
+    def __init__(self, save_path, lossdata_path="", lr=0.05,gpu="0"):
         self.lr = 0.005
         self.gpu = "0"
         self.epochs = 120
@@ -86,6 +86,7 @@ class ConfigClass(object):
         self.p = 1.0
         self.q = 1.0
         self.save_path = save_path
+        self.lossdata_path = lossdata_path
     
 if __name__ == "__main__":
     from DatasetProcess import CoraDataset
