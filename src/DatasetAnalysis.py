@@ -18,7 +18,7 @@ import time
 edge_list = []
 
 
-def read_txt_net(file_path=""):
+def read_txt_neighbor(file_path=""):
     neighbor = {}
     with open(file_path, "r") as f:
         for line in f.readlines():
@@ -44,7 +44,7 @@ def get_average_CE(neighbor):
                 if neighborNode in node_set:
                     edge_set.add((node, neighborNode))
         neighborNodeNum = len(node_set)
-        neighborEdgeNum = len(edge_set)
+        neighborEdgeNum = len(edge_set) / 2
 
         ceNum = 0
         if neighborNodeNum > 1:
@@ -74,7 +74,7 @@ def DataAnalyse(dataset):
     avg_degree = torch.sum(true_degree) / num_nodes
     print('Average degree of ' + dataset.name + f' is {avg_degree}')
 
-    neighbor = read_txt_net('./dataset/' + dataset.name + '/edge_list.txt')
+    neighbor = read_txt_neighbor('./dataset/' + dataset.name + '/edge_list.txt')
     avg_ce = get_average_CE(neighbor)
     print('Average Convergence Factor of ' + dataset.name + f' is {avg_ce}')
 
