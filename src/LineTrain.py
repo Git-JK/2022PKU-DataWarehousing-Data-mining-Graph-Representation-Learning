@@ -4,14 +4,11 @@ import numpy as np
 import random
 import time
 from tqdm import tqdm
-from torch.optim import SparseAdam
+from torch.optim import SparseAdam, AdamW
 from torch.utils.data import Dataset, DataLoader
-import pickle
-import sys
 
 from DatasetProcess import dataset
 from Dataset import NodesDataset, CollateFunction, ConfigClass
-from Model import SkipGramModel
 from LineModel import Line
 
 
@@ -25,27 +22,26 @@ def lineTrainer(config, dataset_name):
     # set[] of nodes in graph(can get with index)
     nodes_dataset = NodesDataset(graph.nodes())
 
-    model = Line(graph.num_nodes()+1, embed_dim=config.embed_dim).to(device)
+    model = Line(graph.num_nodes(), embed_dim=config.embed_dim, order=1).to(device)
     # model = SkipGramModel(graph.num_nodes(), embed_dim=config.embed_dim).to(device)
 
-    optimizer = torch.optim.SGD(model.parameters(), lr=float(config.lr), momentum=0.9, nesterov=True)
-    # optimizer = SparseAdam(model.parameters(), lr=float(config.lr))
+    # optimizer = torch.optim.SGD(model.parameters(), lr=float(config.lr), momentum=0.9, nesterov=True)
+    optimizer = AdamW(model.parameters(), lr=float(config.lr))
 
-    lossdata = {"it": [], "loss": []}
-    it = 0
+    # lossdata = {"it": [], "loss": []}
+    # it = 0
 
     pair_generate_func = CollateFunction(graph, config)
 
-    pair_loader = DataLoader(nodes_dataset, batch_size=config.batch_size, shuffle=True, num_workers=4,
-                             collate_fn=pair_generate_func)
+    # pair_loader = DataLoader(nodes_dataset, batch_size=config.batch_size, shuffle=True, num_workers=4, collate_fn=pair_generate_func)
+    pair_loader = DataLoader(nodes_dataset, batch_size=config.batch_size, shuffle=True, num_workers=0, collate_fn=pair_generate_func)
 
     start_time = time.time()
     for epoch in range(config.epochs):
-        # model.train()
+        model.train()
 
-        # loss_total = []
+        loss_total = []
         top_loss = 100
-
         tqdm_bar = tqdm(pair_loader, desc="Training epoch{epoch}".format(epoch=epoch))
         for i, (batch_src, batch_dst) in enumerate(tqdm_bar):
             batch_src = batch_src.to(device).long()
@@ -55,31 +51,17 @@ def lineTrainer(config, dataset_name):
             batch_neg = torch.from_numpy(batch_neg).to(device).long()
 
             model.zero_grad()
-            loss = model(batch_src, batch_dst, batch_neg, device)
+            loss = model.forward(batch_src, batch_dst, batch_neg, config.batch_size, device)
             loss.backward()
             optimizer.step()
+            loss_total.append(loss.detach().item())
 
-            lossdata["loss"].append(loss.item())
-            lossdata["it"].append(it)
-            it += 1
-
-            #loss = model.forward(batch_src, batch_dst, batch_neg, config.batch_size)
-            # loss.backward()
-            # optimizer.step()
-            # loss_total.append(loss.detach().item())
-
-        if top_loss > np.mean(lossdata["loss"]):
-            top_loss = np.mean(lossdata["loss"])
+        if top_loss > np.mean(loss_total):
+            top_loss = np.mean(loss_total)
             torch.save(model.state_dict(), config.save_path)
+            print(model.state_dict())
             print("Epoch: %03d; loss = %.4f saved path: %s" % (epoch, top_loss, config.save_path))
-        print("Epoch: %03d; loss = %.4f cost time %.4f" % (epoch, np.mean(lossdata["loss"]), time.time() - start_time))
-    print("\nDone training, saving model to {}".format(config.save_path))
-    torch.save(model, "{}".format(config.save_path))
-
-    print("Saving loss data at {}".format(config.lossdata_path))
-    with open(config.lossdata_path, "wb") as ldata:
-        pickle.dump(lossdata, ldata)
-    sys.exit()
+        print("Epoch: %03d; loss = %.4f cost time %.4f" % (epoch, np.mean(loss_total), time.time() - start_time))
 
 
 if __name__ == "__main__":

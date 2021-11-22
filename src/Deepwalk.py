@@ -69,6 +69,7 @@ def deepwalkTrainer(config, dataset_name):
             print("Epoch: %03d; loss = %.4f saved path: %s" %(epoch, top_loss, config.save_path))
         print("Epoch: %03d; loss = %.4f cost time %.4f" % (epoch, np.mean(loss_total), time.time() - start_time))
 
+
 if __name__ == "__main__":
     config = ConfigClass(save_path="./out/actor/actor_deepwalk_ckpt")
     deepwalkTrainer(config, "actor")

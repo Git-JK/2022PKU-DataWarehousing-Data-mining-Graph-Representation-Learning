@@ -33,14 +33,15 @@ class SkipGramModel(nn.Module):
 
 
 if __name__ == "__main__":
+    device = "cuda" if torch.cuda.is_available() else "cpu"
     model = SkipGramModel(1000, embed_dim=32)
-    model.cuda()
+    model.to(device)
     src = np.random.randint(0, 100, size=10)
-    src = torch.from_numpy(src).cuda().long()
+    src = torch.from_numpy(src).to(device).long()
     dst = np.random.randint(0, 100, size=10)
-    dst = torch.from_numpy(dst).cuda().long()
+    dst = torch.from_numpy(dst).to(device).long()
     neg = np.random.randint(0, 100, size=(10, 5))
-    neg = torch.from_numpy(neg).cuda().long()
+    neg = torch.from_numpy(neg).to(device).long()
     
     print(src.shape, dst.shape, neg.shape)
     print(model(src, dst, neg, 24))

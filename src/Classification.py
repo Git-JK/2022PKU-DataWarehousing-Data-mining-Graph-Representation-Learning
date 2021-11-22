@@ -10,9 +10,11 @@ import pandas as pd
 from sklearn import metrics
 import os
 import time
-from DatasetProcess import dataset
 from torch.optim import AdamW
 from tqdm import tqdm
+
+from DatasetProcess import dataset
+from LineModel import Line
 
 
 class NodeDataset(Dataset):
@@ -80,6 +82,11 @@ def evaluate(test_nodes_loader, model):
         
         labels_all = np.append(labels_all, label)
         predict_all = np.append(predict_all, pred)
+
+        # print("begin: \n labels:")
+        # print(labels_all)
+        # print("predict: ")
+        # print(predict_all)
     f1_score = metrics.f1_score(labels_all, predict_all, average="macro")
     return f1_score
 
@@ -92,24 +99,28 @@ def classification(config, dataset_name):
     os.environ["KERAS_BACKEND"]="pytorch"
     torch.backends.cudnn.benchmark = True
 
-    param = torch.load(config.save_path)
-    # param = torch.load(config.save_path, map_location='cpu')
+    # param = torch.load(config.save_path)
+    param = torch.load(config.save_path, map_location='cpu')
+    # print(param)
 
     emb = param['v_embeddings.weight']
     graph = dataset(dataset_name)[0]
     train_nodes_dataset = NodeDataset(graph, "train")
     test_nodes_dataset = NodeDataset(graph, "test")
     val_nodes_dataset = NodeDataset(graph, "val")
-    train_nodes_loader = DataLoader(train_nodes_dataset, batch_size=config.batch_size, shuffle=True, num_workers=4)
-    test_nodes_loader = DataLoader(test_nodes_dataset, batch_size=config.batch_size, shuffle=True, num_workers=4)
-    val_nodes_loader = DataLoader(val_nodes_dataset, batch_size=config.batch_size, shuffle=True, num_workers=4)
+    # train_nodes_loader = DataLoader(train_nodes_dataset, batch_size=config.batch_size, shuffle=True, num_workers=4)
+    # test_nodes_loader = DataLoader(test_nodes_dataset, batch_size=config.batch_size, shuffle=True, num_workers=4)
+    # val_nodes_loader = DataLoader(val_nodes_dataset, batch_size=config.batch_size, shuffle=True, num_workers=4)
+    train_nodes_loader = DataLoader(train_nodes_dataset, batch_size=config.batch_size, shuffle=True, num_workers=0)
+    test_nodes_loader = DataLoader(test_nodes_dataset, batch_size=config.batch_size, shuffle=True, num_workers=0)
+    val_nodes_loader = DataLoader(val_nodes_dataset, batch_size=config.batch_size, shuffle=True, num_workers=0)
     
     model = NodeClassification(emb, num_class=config.num_class)
     model.to(device)
     classifier_path = "./out/" + dataset_name + "/" + dataset_name + "_deepwalk_classification_ckpt"
     if os.path.exists(classifier_path):
-        model.load_state_dict(torch.load(classifier_path))
-        # model.load_state_dict(torch.load(classifier_path, map_location='cpu'))
+        # model.load_state_dict(torch.load(classifier_path))
+        model.load_state_dict(torch.load(classifier_path, map_location='cpu'))
 
     else:
         optimizer = AdamW(model.parameters(), lr=float(config.lr), betas=(0.9, 0.999), eps=1e-08, weight_decay=0.01, amsgrad=False)
@@ -144,14 +155,87 @@ def classification(config, dataset_name):
     print("Testing dataset: f1 = %.4f"%(f1))
 
 
+def line_classification(config, dataset_name):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    os.environ["CUDA_VISIBLE_DEVICES"] = config.gpu
+    os.environ["KERAS_BACKEND"] = "pytorch"
+    torch.backends.cudnn.benchmark = True
+
+    # param = torch.load(config.save_path)
+    param = torch.load(config.save_path, map_location='cpu')
+    # print(param)
+
+    graph = dataset(dataset_name)[0]
+    train_nodes_dataset = NodeDataset(graph, "train")
+    test_nodes_dataset = NodeDataset(graph, "test")
+    val_nodes_dataset = NodeDataset(graph, "val")
+    train_nodes_loader = DataLoader(train_nodes_dataset, batch_size=config.batch_size, shuffle=True, num_workers=0)
+    test_nodes_loader = DataLoader(test_nodes_dataset, batch_size=config.batch_size, shuffle=True, num_workers=0)
+    val_nodes_loader = DataLoader(val_nodes_dataset, batch_size=config.batch_size, shuffle=True, num_workers=0)
+
+    emb = param['nodes_embeddings.weight']
+    # emb = param['contextnodes_embeddings.weight']
+
+    model = NodeClassification(emb, num_class=config.num_class)
+    # model = Line(graph.num_nodes() + 1, embed_dim=config.embed_dim).to(device)
+
+    model.to(device)
+    classifier_path = "./out/" + dataset_name + "/" + dataset_name + "_line_classification_ckpt"
+    if os.path.exists(classifier_path):
+        # model.load_state_dict(torch.load(classifier_path))
+        model.load_state_dict(torch.load(classifier_path, map_location='cpu'))
+
+    else:
+        optimizer = AdamW(model.parameters(), lr=float(config.lr), betas=(0.9, 0.999), eps=1e-08, weight_decay=0.01, amsgrad=False)
+        # optimizer = torch.optim.SGD(model.parameters(), lr=float(config.lr), momentum=0.9, nesterov=True)
+
+        loss_func = nn.BCEWithLogitsLoss()
+
+        start_time = time.time()
+        for epoch in range(config.epochs):
+            loss_total = []
+            top_loss = 100
+            model.train()
+            tqdm_bar = tqdm(train_nodes_loader, desc="Training epoch{epoch}".format(epoch=epoch))
+            for i, (batch_nodes, batch_labels) in enumerate(tqdm_bar):
+                batch_nodes = batch_nodes.to(device).long()
+                batch_labels = batch_labels.to(device).long()
+
+                model.zero_grad()
+                logit = model(batch_nodes)
+                probs = F.softmax(logit, dim=1)
+                loss = loss_func(probs, batch_labels.float())
+                loss.backward()
+                optimizer.step()
+
+                loss_total.append(loss.detach().item())
+            print("Training Epoch: %03d; loss = %.4f cost time  %.4f" % (
+            epoch, np.mean(loss_total), time.time() - start_time))
+            f1 = evaluate(val_nodes_loader, model)
+            print("Validation Epoch: %03d; f1 = %.4f" % (epoch, f1))
+            if top_loss > np.mean(loss_total):
+                top_loss = np.mean(loss_total)
+                torch.save(model.state_dict(), classifier_path)
+
+    f1 = evaluate(test_nodes_loader, model)
+    print("Testing dataset: f1 = %.4f" % (f1))
+
+
 if __name__ == "__main__":
+
     class ConfigClass():
-        def __init__(self, save_path):
+        def __init__(self, save_path, lossdata_path=""):
             self.lr = 0.05
             self.gpu = "0"
             self.epochs = 40
             self.batch_size = 256
             self.num_class = 5
             self.save_path = save_path
+            self.lossdata_path = lossdata_path
+
     config = ConfigClass("./out/actor/actor_deepwalk_ckpt")
     classification(config, "actor")
+
+    config = ConfigClass(save_path="./out/actor/actor_line_ckpt")
+    line_classification(config, "actor")
