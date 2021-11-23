@@ -182,6 +182,7 @@ def line_classification(config, dataset_name):
 
     model.to(device)
     classifier_path = "./out/" + dataset_name + "/" + dataset_name + "_line_classification_ckpt"
+
     if os.path.exists(classifier_path):
         # model.load_state_dict(torch.load(classifier_path))
         model.load_state_dict(torch.load(classifier_path, map_location='cpu'))

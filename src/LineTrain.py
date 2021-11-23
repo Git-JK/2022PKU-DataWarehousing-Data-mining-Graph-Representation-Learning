@@ -3,12 +3,13 @@ import dgl
 import numpy as np
 import random
 import time
-from tqdm import tqdm
-from torch.optim import SparseAdam, AdamW
+from tqdm import tqdm, trange
+from torch.optim import SparseAdam, AdamW, SGD
 from torch.utils.data import Dataset, DataLoader
 
 from DatasetProcess import dataset
 from Dataset import NodesDataset, CollateFunction, ConfigClass
+from Dataset import *
 from LineModel import Line
 
 
@@ -19,39 +20,39 @@ def lineTrainer(config, dataset_name):
     # dataset defined in DatasetProcess(dgl.graph)
     graph = dataset(dataset_name)[0]
 
-    # set[] of nodes in graph(can get with index)
-    nodes_dataset = NodesDataset(graph.nodes())
+    model = Line(graph.num_nodes(), embed_dim=config.embed_dim, order=config.order).to(device)
 
-    model = Line(graph.num_nodes(), embed_dim=config.embed_dim, order=1).to(device)
-    # model = SkipGramModel(graph.num_nodes(), embed_dim=config.embed_dim).to(device)
-
-    # optimizer = torch.optim.SGD(model.parameters(), lr=float(config.lr), momentum=0.9, nesterov=True)
-    optimizer = AdamW(model.parameters(), lr=float(config.lr))
+    optimizer = SparseAdam(model.parameters(), lr=float(config.lr))
+    # optimizer = AdamW(model.parameters(), lr=float(config.lr))
 
     # lossdata = {"it": [], "loss": []}
     # it = 0
 
-    pair_generate_func = CollateFunction(graph, config)
+    edgedistdict, nodedistdict, weights, nodedegrees = makeDist(
+        graph
+    )
+    edgesaliassampler = VoseAlias(edgedistdict)
+    nodesaliassampler = VoseAlias(nodedistdict)
 
-    # pair_loader = DataLoader(nodes_dataset, batch_size=config.batch_size, shuffle=True, num_workers=4, collate_fn=pair_generate_func)
-    pair_loader = DataLoader(nodes_dataset, batch_size=config.batch_size, shuffle=True, num_workers=0, collate_fn=pair_generate_func)
+    batch_range = int(len(edgedistdict) / config.batch_size)
 
     start_time = time.time()
     for epoch in range(config.epochs):
-        model.train()
+        # model.train()
 
         loss_total = []
         top_loss = 100
-        tqdm_bar = tqdm(pair_loader, desc="Training epoch{epoch}".format(epoch=epoch))
-        for i, (batch_src, batch_dst) in enumerate(tqdm_bar):
-            batch_src = batch_src.to(device).long()
-            batch_dst = batch_dst.to(device).long()
-
-            batch_neg = np.random.randint(0, graph.num_nodes(), size=(batch_src.shape[0], config.neg_num))
-            batch_neg = torch.from_numpy(batch_neg).to(device).long()
+        # tqdm_bar = tqdm(pair_loader, desc="Training epoch{epoch}".format(epoch=epoch))
+        for b in trange(batch_range):
+            samplededges = edgesaliassampler.sample_n(config.batch_size)
+            batch = list(makeData(samplededges, config.neg_num, weights, nodedegrees, nodesaliassampler))
+            batch = torch.LongTensor(batch)
+            v_i = batch[:, 0]
+            v_j = batch[:, 1]
+            negsamples = batch[:, 2:]
 
             model.zero_grad()
-            loss = model.forward(batch_src, batch_dst, batch_neg, config.batch_size, device)
+            loss = model.forward(v_i, v_j, negsamples, config.batch_size, device)
             loss.backward()
             optimizer.step()
             loss_total.append(loss.detach().item())
@@ -65,5 +66,12 @@ def lineTrainer(config, dataset_name):
 
 
 if __name__ == "__main__":
+
     config = ConfigClass(save_path="./out/actor/actor_line_ckpt", lossdata_path="./out/actor/actor_line_loss.pkl")
     lineTrainer(config, "actor")
+
+    # config = ConfigClass(save_path="./out/chameleon/chameleon_line_ckpt")
+    # lineTrainer(config, "chameleon")
+
+    # config = ConfigClass(save_path="./out/cora/cora_line_ckpt")
+    # lineTrainer(config, "cora")

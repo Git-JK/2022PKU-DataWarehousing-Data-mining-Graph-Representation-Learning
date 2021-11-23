@@ -12,12 +12,15 @@ class Line(nn.Module):
 
         self.embed_dim = embed_dim
         self.order = order
-        self.nodes_embeddings = nn.Embedding(size, embed_dim)
-        # self.nodes_embeddings = nn.Embedding(size, embed_dim, sparse=True)
+
+        # self.nodes_embeddings = nn.Embedding(size, embed_dim)
+        self.nodes_embeddings = nn.Embedding(size, embed_dim, sparse=True)
 
         if order == 2:
-            self.contextnodes_embeddings = nn.Embedding(size, embed_dim)
-            # self.contextnodes_embeddings = nn.Embedding(size, embed_dim, sparse=True)
+
+            # self.contextnodes_embeddings = nn.Embedding(size, embed_dim)
+            self.contextnodes_embeddings = nn.Embedding(size, embed_dim, sparse=True)
+
             self.contextnodes_embeddings.weight.data = self.contextnodes_embeddings.weight.data.uniform_(-.5, .5) / embed_dim
 
         self.nodes_embeddings.weight.data = self.nodes_embeddings.weight.data.uniform_(-.5, .5) / embed_dim
@@ -45,8 +48,8 @@ class Line(nn.Module):
             dim=1
         )
         loss = positivebatch + negativebatch
-        return -torch.mean(loss) / batch_size
-        # return -torch.mean(loss)
+        # return -torch.mean(loss) / batch_size
+        return -torch.mean(loss)
 
 
 if __name__ == "__main__":
