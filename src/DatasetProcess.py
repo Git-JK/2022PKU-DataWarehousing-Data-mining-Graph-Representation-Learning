@@ -7,10 +7,16 @@ import pandas as pd
 from torch._C import Graph
 
 class CoraDataset(DGLDataset):
+    '''
+    Turn cora dataset into DGLgraph
+    '''
     def __init__(self):
         super().__init__(name='cora')
     
     def process(self):
+        '''
+        read in edges to get all src nodes and dst nodes, and read in features, labels, masks to form a DGLgraph
+        '''
         edges_data = pd.read_csv('./dataset/cora/edge_list.csv')
         edges_src = torch.from_numpy(edges_data['src'].to_numpy())
         edges_dst = torch.from_numpy(edges_data['dst'].to_numpy())
@@ -61,10 +67,16 @@ class CoraDataset(DGLDataset):
         return 1
 
 class ChameleonDataset(DGLDataset):
+    '''
+    Turn chameleon dataset into DGLgraph
+    '''
     def __init__(self):
         super().__init__(name='chameleon')
     
     def process(self):
+        '''
+        read in edges to get all src nodes and dst nodes, and read in features, labels, masks to form a DGLgraph
+        '''
         edges_data = pd.read_csv('./dataset/chameleon/edge_list.csv')
         edges_src = torch.from_numpy(edges_data['src'].to_numpy())
         edges_dst = torch.from_numpy(edges_data['dst'].to_numpy())
@@ -115,10 +127,16 @@ class ChameleonDataset(DGLDataset):
         return 1
 
 class ActorDataset(DGLDataset):
+    '''
+    Turn actor dataset into DGLgraph
+    '''
     def __init__(self):
         super().__init__(name='actor')
     
     def process(self):
+        '''
+        read in edges to get all src nodes and dst nodes, and read in features, labels, masks to form a DGLgraph
+        '''
         edges_data = pd.read_csv('./dataset/actor/edge_list.csv')
         edges_src = torch.from_numpy(edges_data['src'].to_numpy())
         edges_dst = torch.from_numpy(edges_data['dst'].to_numpy())
@@ -169,6 +187,9 @@ class ActorDataset(DGLDataset):
         return 1
     
 def dataset(name):
+    '''
+    a function to return the graph of the dataset whose name is the input
+    '''
     if name == "cora":
         return CoraDataset()
     elif name == 'chameleon':

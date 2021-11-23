@@ -5,7 +5,9 @@ import numpy as np
 from torch.nn.modules import loss
 
 class SkipGramModel(nn.Module):
+    # skip-gram model
     def __init__(self, num_nodes, embed_dim):
+        # initialize the weight of two embedding layers, one for object word, one for other words
         super(SkipGramModel, self).__init__()
         self.num_nodes = num_nodes
         self.emb_dim = embed_dim
@@ -16,6 +18,7 @@ class SkipGramModel(nn.Module):
         self.v_embeddings.weight.data.uniform_(-0, 0)
     
     def forward(self, src, pos, neg, batch_size):
+        # use the negative sampling for loss and training
         embed_src = self.u_embeddings(src)
         embed_pos = self.v_embeddings(pos)
         embed_neg = self.v_embeddings(neg)

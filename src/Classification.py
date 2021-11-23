@@ -18,6 +18,9 @@ from LineModel import Line
 
 
 class NodeDataset(Dataset):
+    '''
+    return a dataset for classification training/validation/testing, it consists of (node, node_label), label is one-hot vector
+    '''
     def __init__(self, graph, mode="train"):
         train_mask = graph.ndata["train_mask"]
         val_mask = graph.ndata["val_mask"]
@@ -28,6 +31,7 @@ class NodeDataset(Dataset):
         data = np.array([nodes, label]).T
         title = ['nodes', 'labels']
         df = pd.DataFrame.from_records(data, columns=title)
+        # turn the labels into one-hot vectors
         df_label = pd.crosstab(df.nodes, df.labels).gt(0).astype(int)
         if mode == "train":
             self.nodes = np.array(graph.nodes()[train_mask])
@@ -48,6 +52,9 @@ class NodeDataset(Dataset):
 
 
 class NodeClassification(nn.Module):
+    '''
+    use a fully connected layer and softmax for classification
+    '''
     def __init__(self, emb, num_class=7):
         super(NodeClassification, self).__init__()
         self.emb = nn.Embedding.from_pretrained(emb, freeze=True)
@@ -63,7 +70,7 @@ class NodeClassification(nn.Module):
 
 
 def evaluate(test_nodes_loader, model):
-
+    # evaluate the classification model on the testing set, return macro f1 scores
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     model.eval()
@@ -92,7 +99,7 @@ def evaluate(test_nodes_loader, model):
 
 
 def classification(config, dataset_name):
-
+    # classifier training process
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     os.environ["CUDA_VISIBLE_DEVICES"] = config.gpu
@@ -156,6 +163,7 @@ def classification(config, dataset_name):
 
 
 def line_classification(config, dataset_name, order=1):
+
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     os.environ["CUDA_VISIBLE_DEVICES"] = config.gpu
@@ -232,7 +240,7 @@ def line_classification(config, dataset_name, order=1):
 
 
 if __name__ == "__main__":
-
+    # train and test classifier on all datasets
     class ConfigClass():
         def __init__(self, save_path, num_class=5, lossdata_path=""):
             self.lr = 0.05
