@@ -268,7 +268,8 @@ if __name__ == "__main__":
     # ---LINE Model Classification
     print("LINE Model:")
 
-    # 一阶临近
+    # 一阶相似度
+    print("First-order proximity：")
     config = ConfigClass(save_path="./out/actor/actor_line_1_ckpt")
     line_classification(config, "actor")
     # f1 = 0.2980
@@ -281,7 +282,8 @@ if __name__ == "__main__":
     # line_classification(config, "chameleon")
     # f1 = 0.5169
 
-    # 二阶临近
+    # 二阶相似度
+    print("Second-order proximity：")
     config = ConfigClass(save_path="./out/actor/actor_line_2_ckpt")
     line_classification(config, "actor", order=2)
     # f1 = 0.2936

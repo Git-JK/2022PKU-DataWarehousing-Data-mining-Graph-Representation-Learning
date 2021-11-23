@@ -67,7 +67,7 @@ def lineTrainer(config, dataset_name, order=1):
 
 if __name__ == "__main__":
 
-    # 一阶临近
+    # 一阶相似度
     # config = ConfigClass(save_path="./out/actor/actor_line_1_ckpt", lossdata_path="./out/actor/actor_line_loss.pkl")
     # lineTrainer(config, "actor")
 
@@ -77,7 +77,7 @@ if __name__ == "__main__":
     # config = ConfigClass(save_path="./out/cora/cora_line_1_ckpt")
     # lineTrainer(config, "cora")
 
-    # 二阶临近
+    # 二阶相似度
     config = ConfigClass(save_path="./out/actor/actor_line_2_ckpt", lossdata_path="./out/actor/actor_line_loss.pkl")
     lineTrainer(config, "actor", order=2)
 

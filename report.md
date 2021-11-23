@@ -4,6 +4,10 @@
 
 ### 1.0 数据分析任务的运行
 
+1. 运行**DataTransform.py**
+2. 运行**DataProcess.py**
+3. 运行**DatasetAnalysis.py**
+
 
 ### 1.1 Deepwalk Model的运行
 
@@ -12,7 +16,65 @@
 3. 如果要进行重新训练model，运行**Deepwalk.py**
 4. 运行**Classification.py**，在其最下方选择需要进行classification的数据集，注释掉对其他数据集分类的代码后运行，得到**macro $F_1$ score**
 
+### 1.2 
+
+1. 
+2. 
+
+### 1.3 LINE Model的运行
+
+1. 运行**DataTransform.py**
+2. 运行**DataProcess.py**
+3. 如果要重新训练model，在main函数中选择使用一阶临近或二阶临近（order=1 or order=2）以及要训练的数据集，运行**LineTrain.py**
+4. 在main函数中选择使用的模型以及数据集，运行**Classification.py**，得到**macro $F_1$ score**
+
 ## 2 各个Model的详细情况
+
+### 2.0 数据分析
+
+#### 2.0.1 实验过程和结果
+
+- 数据集的处理与转化
+
+  - 将**edge_list.txt**转化为DGLgraph对象，这部分具体操作详见**2.1.1**中的叙述。
+  - 由于在计算节点的聚集系数时，需要知道该节点所有相邻节点之间的相邻关系，为方便，在DatasetAnalysis.py中预先得到一个neighbor_dict，记录每个节点的全部相邻节点。
+
+- 节点度数、平均节点度数以及平均节点聚集系数的计算方法
+
+  - DGLgraph对象提供了in_degrees()方法，可以得到每个节点的入度（度数）（无向图中无向边由两条相反方向的有向边表示，出度=入度=度数），全部加和除以节点总数即得到平均节点度数。
+
+  - 对于每个节点，通过neighbor_dict得到其全部相邻节点，再根据neighbor_dict查找其中相邻的节点对数，通过
+    $$
+    C_i = \frac{2e_i}{k_i(k_i-1)}	\\
+    其中k_i为节点i的相邻节点的个数，e_i为节点i的全部相邻节点中相邻节点对的数量。
+    $$
+    得到该节点的聚集系数，对全部节点的聚集系数求平均，即得到该图的平均聚集系数。
+
+- 这里给出三个数据集的平均节点度数(degree)、度分布直方图（在./result中）、以及平均节点聚集系数(Convergence Factor)。
+
+- 从上至下分别为cora、chameleon、actor dataset。
+
+  ```
+  Average degree of cora is 3.8980798721313477
+  Average Convergence Factor of cora is 0.24067329850193728
+  Average degree of chameleon is 27.554677963256836
+  Average Convergence Factor of chameleon is 0.48135057608791076
+  Average degree of actor is 7.015526294708252
+  Average Convergence Factor of actor is 0.08019255113574139
+  ```
+
+  ![](./result/cora.png)
+
+  ![](./result/chameleon.png)
+
+  ![](./result/actor.png)
+
+#### 2.0.2 实验中出现的问题
+
+- 需要注意在数据集的edge_list.txt中以及DGLgraph中，一条无向边都是由两条反向的有向边表示的，因此计算节点度数时，并非“节点度数=入度+出度”，而是“节点度数=入度=出度”；
+- 同样，在计算聚集系数时，要注意在neighbor_dict中既存在“a为b的相邻节点”，也存在“b为a的相邻节点”，在计算相邻节点之间有多少连边时要注意不要重复计数两次。
+
+
 
 ### 2.1 DeepWalk
 
@@ -45,3 +107,46 @@
     Testing dataset: f1 = 0.3011
     ```
     - classifier model训练完之后model也保存在了**./out/dataset_name**文件夹下，命名为dataset_name_deepwalk_classification_ckpt。
+
+### 2.2 
+
+#### 2.2.1 
+
+
+
+### 2.3 LINE
+
+#### 2.3.1 实验过程和结果
+
+- 数据集的处理和转化，这一部分处理与前两个Model相同，不再赘述。
+
+- LINE算法中定义了两种相似度
+
+  - 一阶相似度用于描述图中成对顶点之间的局部相似度，形式化描述为若 ![[公式]](https://www.zhihu.com/equation?tex=u) , ![[公式]](https://www.zhihu.com/equation?tex=v) 之间存在直连边，则边权 ![[公式]](https://www.zhihu.com/equation?tex=w_%7Buv%7D) 即为两个顶点的相似度，若不存在直连边，则1阶相似度为0。 如上图，6和7之间存在直连边，且边权较大，则认为两者相似且1阶相似度较高，而5和6之间不存在直连边，则两者间1阶相似度为0。
+  - 二阶相似度用于描述两个节点未必直连边，但存在多个相同的邻居节点时的相似度，形式化定义为，令 ![[公式]](https://www.zhihu.com/equation?tex=p_u%3D%28w_%7Bu%2C1%7D%2C...%2Cw_%7Bu%2C%7CV%7C%7D%29) 表示顶点 ![[公式]](https://www.zhihu.com/equation?tex=u) 与所有其他顶点间的1阶相似度，则 ![[公式]](https://www.zhihu.com/equation?tex=u) 与 ![[公式]](https://www.zhihu.com/equation?tex=v) 的2阶相似度可以通过 ![[公式]](https://www.zhihu.com/equation?tex=p_u) 和 ![[公式]](https://www.zhihu.com/equation?tex=p_v) 的相似度表示。若![[公式]](https://www.zhihu.com/equation?tex=u)与![[公式]](https://www.zhihu.com/equation?tex=v)之间不存在相同的邻居顶点，则2阶相似度为0。
+  - 根据建议，分别采用两种相似度训练了两个LINE Model。
+
+- LINE支持对带权图的训练（尽管所给的三个数据集中没有边权），但由于在直接使用梯度下降方法时，边权会直接乘在梯度上，导致当图中边权方差较大时，很难选择一个合适的学习率。因此，希望采用某种方式使得所有边权相同。一种方法就是从原始的带权边中进行采样，每条边被采样的概率正比于原始图中边的权重。这样既满足了边权相同的要求，也没有增加太多存储开销。在这里使用的是Alias算法（O(1)时间复杂度的离散抽样算法）进行采样。
+
+  - 这里因为edge_list.txt中定义的边没有权值，故所有权值默认为1。
+
+- 在**LineTrain.py**中实现，使用给定dataset生成的graph，以SparseAdam作为optimizer，对LINE model同样可以采用negative sampling的训练方法来提高效率，进行batch_size = 10, embed_dim = 64的120 epochs的训练，最后得到的loss最低的model存在./out/dataset_name文件夹下，命名为“$dataset_name$\_line_1(or 2)_ckpt”中
+
+- 在**Classification.py**中对已经被embed成向量的图结点进行分类任务的训练，并使用测试集计算其**macro $F_1$ score**，该过程同样与前两个Model相同，这里只给出对于三个数据集分别采用一阶相似度与二阶相似度时的**macro $F_1$ score**。
+
+- 从上至下分别为cora、chameleon、actor dataset。
+
+  ```
+    LINE Model：
+    First-order proximity：
+    Testing dataset: f1 = 0.4335
+    Testing dataset: f1 = 0.5169
+    Testing dataset: f1 = 0.2980
+    Second-order proximity：
+    Testing dataset: f1 = 0.4925
+    Testing dataset: f1 = 0.5591
+    Testing dataset: f1 = 0.2936
+  ```
+
+    - classifier model训练完之后model也保存在了**./out/dataset_name**文件夹下，命名为 “$dataset_name$\_line_1(or 2)_classification_ckpt”。
+
