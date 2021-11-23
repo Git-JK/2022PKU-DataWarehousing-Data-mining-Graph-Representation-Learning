@@ -155,7 +155,7 @@ def classification(config, dataset_name):
     print("Testing dataset: f1 = %.4f"%(f1))
 
 
-def line_classification(config, dataset_name):
+def line_classification(config, dataset_name, order=1):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     os.environ["CUDA_VISIBLE_DEVICES"] = config.gpu
@@ -174,14 +174,19 @@ def line_classification(config, dataset_name):
     test_nodes_loader = DataLoader(test_nodes_dataset, batch_size=config.batch_size, shuffle=True, num_workers=0)
     val_nodes_loader = DataLoader(val_nodes_dataset, batch_size=config.batch_size, shuffle=True, num_workers=0)
 
-    emb = param['nodes_embeddings.weight']
-    # emb = param['contextnodes_embeddings.weight']
+    if order==1:
+        emb = param['nodes_embeddings.weight']
+    else:
+        emb = param['contextnodes_embeddings.weight']
 
     model = NodeClassification(emb, num_class=config.num_class)
-    # model = Line(graph.num_nodes() + 1, embed_dim=config.embed_dim).to(device)
+    # model = Line(graph.num_nodes(), embed_dim=config.embed_dim).to(device)
 
     model.to(device)
-    classifier_path = "./out/" + dataset_name + "/" + dataset_name + "_line_classification_ckpt"
+    if order == 1:
+        classifier_path = "./out/" + dataset_name + "/" + dataset_name + "_line_1_classification_ckpt"
+    else:
+        classifier_path = "./out/" + dataset_name + "/" + dataset_name + "_line_2_classification_ckpt"
 
     if os.path.exists(classifier_path):
         # model.load_state_dict(torch.load(classifier_path))
@@ -219,8 +224,8 @@ def line_classification(config, dataset_name):
                 top_loss = np.mean(loss_total)
                 torch.save(model.state_dict(), classifier_path)
 
-                # f1 = evaluate(test_nodes_loader, model)
-                # print("Testing dataset: f1 = %.4f" % (f1))
+                f1 = evaluate(test_nodes_loader, model)
+                print("Testing dataset: f1 = %.4f" % (f1))
 
     f1 = evaluate(test_nodes_loader, model)
     print("Testing dataset: f1 = %.4f" % (f1))
@@ -229,12 +234,12 @@ def line_classification(config, dataset_name):
 if __name__ == "__main__":
 
     class ConfigClass():
-        def __init__(self, save_path, lossdata_path=""):
+        def __init__(self, save_path, num_class=5, lossdata_path=""):
             self.lr = 0.05
             self.gpu = "0"
-            self.epochs = 25
+            self.epochs = 100
             self.batch_size = 256
-            self.num_class = 5 # cora:7, others:5
+            self.num_class = num_class # cora:7, others:5
             self.save_path = save_path
             self.lossdata_path = lossdata_path
 
@@ -242,20 +247,41 @@ if __name__ == "__main__":
     print("Deepwalk Model:")
     config = ConfigClass("./out/actor/actor_deepwalk_ckpt")
     classification(config, "actor")
+    # f1 = 0.3011
 
-    # config = ConfigClass("./out/cora/cora_deepwalk_ckpt")
+    # config = ConfigClass("./out/cora/cora_deepwalk_ckpt", num_class=7)
     # classification(config, "cora")
+    # f1 = 0.6340
 
     # config = ConfigClass("./out/chameleon/chameleon_deepwalk_ckpt")
     # classification(config, "chameleon")
+    # f1 = 0.5120
 
     # ---LINE Model Classification
     print("LINE Model:")
-    config = ConfigClass(save_path="./out/actor/actor_line_ckpt")
+
+    # 一阶临近
+    config = ConfigClass(save_path="./out/actor/actor_line_1_ckpt")
     line_classification(config, "actor")
+    # f1 = 0.2980
 
-    # config = ConfigClass(save_path="./out/cora/cora_line_ckpt")
+    # config = ConfigClass(save_path="./out/cora/cora_line_1_ckpt", num_class=7)
     # line_classification(config, "cora")
+    # f1 = 0.4335
 
-    # config = ConfigClass(save_path="./out/chameleon/chameleon_line_ckpt")
+    # config = ConfigClass(save_path="./out/chameleon/chameleon_line_1_ckpt")
     # line_classification(config, "chameleon")
+    # f1 = 0.5169
+
+    # 二阶临近
+    config = ConfigClass(save_path="./out/actor/actor_line_2_ckpt")
+    line_classification(config, "actor", order=2)
+    # f1 = 0.2936
+
+    # config = ConfigClass(save_path="./out/cora/cora_line_2_ckpt", num_class=7)
+    # line_classification(config, "cora", order=2)
+    # f1 = 0.4925
+
+    # config = ConfigClass(save_path="./out/chameleon/chameleon_line_2_ckpt")
+    # line_classification(config, "chameleon", order=2)
+    # f1 = 0.5591

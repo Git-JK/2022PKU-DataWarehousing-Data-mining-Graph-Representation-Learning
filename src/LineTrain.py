@@ -13,14 +13,14 @@ from Dataset import *
 from LineModel import Line
 
 
-def lineTrainer(config, dataset_name):
+def lineTrainer(config, dataset_name, order=1):
     device = "cuda" if torch.cuda.is_available() else "cpu"
     torch.backends.cudnn.benchmark = True
 
     # dataset defined in DatasetProcess(dgl.graph)
     graph = dataset(dataset_name)[0]
 
-    model = Line(graph.num_nodes(), embed_dim=config.embed_dim, order=config.order).to(device)
+    model = Line(graph.num_nodes(), embed_dim=config.embed_dim, order=order).to(device)
 
     optimizer = SparseAdam(model.parameters(), lr=float(config.lr))
     # optimizer = AdamW(model.parameters(), lr=float(config.lr))
@@ -67,11 +67,22 @@ def lineTrainer(config, dataset_name):
 
 if __name__ == "__main__":
 
-    config = ConfigClass(save_path="./out/actor/actor_line_ckpt", lossdata_path="./out/actor/actor_line_loss.pkl")
-    lineTrainer(config, "actor")
+    # 一阶临近
+    # config = ConfigClass(save_path="./out/actor/actor_line_1_ckpt", lossdata_path="./out/actor/actor_line_loss.pkl")
+    # lineTrainer(config, "actor")
 
-    # config = ConfigClass(save_path="./out/chameleon/chameleon_line_ckpt")
+    # config = ConfigClass(save_path="./out/chameleon/chameleon_line_1_ckpt")
     # lineTrainer(config, "chameleon")
 
-    # config = ConfigClass(save_path="./out/cora/cora_line_ckpt")
+    # config = ConfigClass(save_path="./out/cora/cora_line_1_ckpt")
     # lineTrainer(config, "cora")
+
+    # 二阶临近
+    config = ConfigClass(save_path="./out/actor/actor_line_2_ckpt", lossdata_path="./out/actor/actor_line_loss.pkl")
+    lineTrainer(config, "actor", order=2)
+
+    config = ConfigClass(save_path="./out/chameleon/chameleon_line_2_ckpt")
+    lineTrainer(config, "chameleon", order=2)
+
+    config = ConfigClass(save_path="./out/cora/cora_line_2_ckpt")
+    lineTrainer(config, "cora", order=2)
