@@ -219,6 +219,9 @@ def line_classification(config, dataset_name):
                 top_loss = np.mean(loss_total)
                 torch.save(model.state_dict(), classifier_path)
 
+                # f1 = evaluate(test_nodes_loader, model)
+                # print("Testing dataset: f1 = %.4f" % (f1))
+
     f1 = evaluate(test_nodes_loader, model)
     print("Testing dataset: f1 = %.4f" % (f1))
 
@@ -229,14 +232,30 @@ if __name__ == "__main__":
         def __init__(self, save_path, lossdata_path=""):
             self.lr = 0.05
             self.gpu = "0"
-            self.epochs = 40
+            self.epochs = 25
             self.batch_size = 256
-            self.num_class = 5
+            self.num_class = 5 # cora:7, others:5
             self.save_path = save_path
             self.lossdata_path = lossdata_path
 
+    # ---Deepwalk Model Classification
+    print("Deepwalk Model:")
     config = ConfigClass("./out/actor/actor_deepwalk_ckpt")
     classification(config, "actor")
 
+    # config = ConfigClass("./out/cora/cora_deepwalk_ckpt")
+    # classification(config, "cora")
+
+    # config = ConfigClass("./out/chameleon/chameleon_deepwalk_ckpt")
+    # classification(config, "chameleon")
+
+    # ---LINE Model Classification
+    print("LINE Model:")
     config = ConfigClass(save_path="./out/actor/actor_line_ckpt")
     line_classification(config, "actor")
+
+    # config = ConfigClass(save_path="./out/cora/cora_line_ckpt")
+    # line_classification(config, "cora")
+
+    # config = ConfigClass(save_path="./out/chameleon/chameleon_line_ckpt")
+    # line_classification(config, "chameleon")
