@@ -151,6 +151,9 @@ def makeData(samplededges, negsamplesize, weights, nodedegrees, nodesaliassample
 
 
 class NodesDataset(Dataset):
+    '''
+    return nodes of a graph
+    '''
     def __init__(self, nodes):
         self.nodes = nodes
     def __len__(self):
@@ -159,7 +162,11 @@ class NodesDataset(Dataset):
         return self.nodes[index]
     
 class CollateFunction(object):
+    '''
+    collate function set, including how to random walk, configuration and how to sample pairs for skip-gram model
+    '''
     def __init__(self, graph, config, walk_mode="random_walk"):
+        # init parameters and which graph is used and the walk mode
         self.walk_mode = config.walk_mode
         self.p = config.p
         self.q = config.q
@@ -171,6 +178,7 @@ class CollateFunction(object):
         self.nodes = graph.nodes().tolist()
     
     def sample_walks(self, graph, seed_nodes, walk_length, walk_mode):
+        # according to the graph, starting nodes, walk length and walk mode, return random walks
         if walk_mode == "random_walk":
             walks = dgl.sampling.random_walk(graph, seed_nodes, length=walk_length)
         elif walk_mode == "node2vec_random_walk":
@@ -180,6 +188,7 @@ class CollateFunction(object):
         return walks
     
     def skip_gram_gen_pairs(self, walk, half_win_size=2):
+        # according to the walk path, generate pairs for skip gram model
         src = []
         dst = []
         l = len(walk)
@@ -197,6 +206,7 @@ class CollateFunction(object):
         return src, dst
     
     def __call__(self, batch_nodes):
+        # sample random walks and generate pairs [src, dst](a batch) as skip-gram model's input from the walk paths
         batch_src = []
         batch_dst = []
         walk_list = []
@@ -235,6 +245,7 @@ class ConfigClass(object):
         self.order = 1
     
 if __name__ == "__main__":
+    # test whether the classes above work normally
     from DatasetProcess import CoraDataset
     graph = CoraDataset()[0]
     nodes_dataset = NodesDataset(graph.nodes())

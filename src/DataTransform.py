@@ -2,6 +2,7 @@ import csv
 import os
 
 def txt2csv(file_path, dst_path, head_line=''):
+    # change data forms from txt to csv
     f = open(file_path, 'r')
     data = []
     data.append(head_line.split(','))

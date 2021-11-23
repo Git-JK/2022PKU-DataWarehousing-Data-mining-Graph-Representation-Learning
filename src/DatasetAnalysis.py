@@ -89,8 +89,8 @@ def DataAnalyse(dataset):
     plt.hist(histdata, bins= np.arange(min_degree, max_degree, 5), density=True)
     plt.savefig('./result/' + dataset.name + '.png')
     
-
-DataAnalyse(CoraDataset())
-DataAnalyse(ChameleonDataset())
-DataAnalyse(ActorDataset())
+if __name__ == "__main__":
+    DataAnalyse(CoraDataset())
+    DataAnalyse(ChameleonDataset())
+    DataAnalyse(ActorDataset())
 
