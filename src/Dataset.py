@@ -238,8 +238,8 @@ class ConfigClass(object):
         self.win_size = 6
         self.neg_num = 5
         self.walk_mode = "random_walk"
-        self.p = 1.0
-        self.q = 1.0
+        self.p = 2
+        self.q = 2
         self.save_path = save_path
         self.lossdata_path = lossdata_path
         self.order = 1
