@@ -16,10 +16,12 @@
 3. 如果要进行重新训练model，运行**Deepwalk.py**
 4. 运行**Classification.py**，在其最下方选择需要进行classification的数据集，注释掉对其他数据集分类的代码后运行，得到**macro $F_1$ score**
 
-### 1.2 
+### 1.2 Node2Vec Model的运行
 
-1. 
-2. 
+1. 运行**DataTransform.py**
+2. 运行**DataProcess.py**
+3. 如果要进行重新训练model，运行**Node2Vec.py**
+4. 运行**Classification.py**，在其最下方选择需要进行classification的数据集，注释掉对其他数据集分类的代码后运行，得到**macro $F_1$ score**
 
 ### 1.3 LINE Model的运行
 
@@ -108,11 +110,36 @@
     ```
     - classifier model训练完之后model也保存在了**./out/dataset_name**文件夹下，命名为dataset_name_deepwalk_classification_ckpt。
 
-### 2.2 
+### 2.2 Node2Vec
 
 #### 2.2.1 
 
+- 数据集的处理和转化。
+   - 这一部分处理与Node2Vec相同，不再赘述。
 
+- 模型的构建
+    - 由于Node2Vec与DeepWalk算法的继承性，二者在游走序列的生成、Model的构建、训练pair的选择上大致相同，Node2Vec算法中调用DeepWalk的SkipGram网络进行游走序列的对应训练。
+    - 二者的区别在于游走序列的生成算法。Node2Vec通过两个超参数p与q对游走的规则进行限制。对于初始节点t与当前游走节点v，x为v相邻的节点，有如下规则：
+        - 如果新节点与t相同，则x的采样概率为1/p。
+        - 如果新节点与t相邻，则x的采样概率为1。
+        - 如果新节点与t不相邻，则x的采样概率为1/q。
+    - 总结来说，p决定了构建游走序列时回到初始点的倾向，q决定了向外游走时的BFS或DFS倾向。
+    
+- 在**Node2Vec.py**中实现，对应规则游走序列的生成与训练过程的完成。训练使用的超参数在Dataset.py的config结构中，p、q暂定为2。
+
+- 在**Classification.py**中对已经被embed成向量的图结点进行分类任务的训练，并使用测试集计算其**macro $F_1$ score**，该过程同样与前两个Model相同。
+
+- 从上至下分别为cora、chameleon、actor dataset。
+
+  ```
+    Testing dataset: f1 = 0.6222
+    Testing dataset: f1 = 0.4649
+    Testing dataset: f1 = 0.2492
+  ```
+
+    - classifier model训练完之后model也保存在了**./out/dataset_name**文件夹下，命名为dataset_name_node2vec_classification_ckpt。
+
+       
 
 ### 2.3 LINE
 
