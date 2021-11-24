@@ -112,7 +112,7 @@
 
 ### 2.2 Node2Vec
 
-#### 2.2.1 
+#### 2.2.1 实验过程和结果
 
 - 数据集的处理和转化。
    - 这一部分处理与Node2Vec相同，不再赘述。
@@ -150,7 +150,7 @@
 - LINE算法中定义了两种相似度
 
   - 一阶相似度用于描述图中成对顶点之间的局部相似度，形式化描述为若 ![[公式]](https://www.zhihu.com/equation?tex=u) , ![[公式]](https://www.zhihu.com/equation?tex=v) 之间存在直连边，则边权 ![[公式]](https://www.zhihu.com/equation?tex=w_%7Buv%7D) 即为两个顶点的相似度，若不存在直连边，则1阶相似度为0。 如上图，6和7之间存在直连边，且边权较大，则认为两者相似且1阶相似度较高，而5和6之间不存在直连边，则两者间1阶相似度为0。
-  - 二阶相似度用于描述两个节点未必直连边，但存在多个相同的邻居节点时的相似度，形式化定义为，令 ![[公式]](https://www.zhihu.com/equation?tex=p_u%3D%28w_%7Bu%2C1%7D%2C...%2Cw_%7Bu%2C%7CV%7C%7D%29) 表示顶点 ![[公式]](https://www.zhihu.com/equation?tex=u) 与所有其他顶点间的1阶相似度，则 ![[公式]](https://www.zhihu.com/equation?tex=u) 与 ![[公式]](https://www.zhihu.com/equation?tex=v) 的2阶相似度可以通过 ![[公式]](https://www.zhihu.com/equation?tex=p_u) 和 ![[公式]](https://www.zhihu.com/equation?tex=p_v) 的相似度表示。若![[公式]](https://www.zhihu.com/equation?tex=u)与![[公式]](https://www.zhihu.com/equation?tex=v)之间不存在相同的邻居顶点，则2阶相似度为0。
+  - 二阶相似度用于描述两个节点未必直连边，但存在多个相同的邻居节点时的相似度，形式化定义为，令 ![[公式]](https://www.zhihu.com/equation?tex=p_u%3D%28w_%7Bu%2C1%7D%2C...%2Cw_%7Bu%2C%7CV%7C%7D%29) 表示顶点 ![[公式]](https://www.zhihu.com/equation?tex=u) 与所有其他顶点间的1阶相似度，则 ![[公式]](https://www.zhihu.com/equation?tex=u) 与 ![[公式]](https://www.zhihu.com/equation?tex=v) 的2阶相似度可以通过 ![[公式]](https://www.zhihu.com/equation?tex=p_u) 和 ![[公式]](https://www.zhihu.com/equation?tex=p_v) 的相似度表示。若 ![[公式]](https://www.zhihu.com/equation?tex=u) 与 ![[公式]](https://www.zhihu.com/equation?tex=v) 之间不存在相同的邻居顶点，则2阶相似度为0。
   - 根据建议，分别采用两种相似度训练了两个LINE Model。
 
 - LINE支持对带权图的训练（尽管所给的三个数据集中没有边权），但由于在直接使用梯度下降方法时，边权会直接乘在梯度上，导致当图中边权方差较大时，很难选择一个合适的学习率。因此，希望采用某种方式使得所有边权相同。一种方法就是从原始的带权边中进行采样，每条边被采样的概率正比于原始图中边的权重。这样既满足了边权相同的要求，也没有增加太多存储开销。在这里使用的是Alias算法（O(1)时间复杂度的离散抽样算法）进行采样。
@@ -176,4 +176,52 @@
   ```
 
     - classifier model训练完之后model也保存在了**./out/dataset_name**文件夹下，命名为 “$dataset_name$\_line_1(or 2)_classification_ckpt”。
+
+## 3 算法效果对比
+
+### 3.0 分类正确率对比
+
+#### 3.0.1 cora
+
+- 对于节点聚集系数最低、结构较为简单的cora数据集，三种方法的正确率排列如下，其中LINE算法取两种相似度中较好的结果。
+  ```
+    Dataset Cora:
+  
+    Deepwalk: f1 = 0.6340
+    Node2Vec: f1 = 0.6222
+    LINE: f1 = 0.4925
+  ```
+- 效果较好的是Deepwalk算法，效果较差的是LINE算法。
+
+#### 3.0.2 chameleon
+
+- 对于chameleon数据集，三种方法的正确率排列如下，其中LINE算法取两种相似度中较好的结果。
+  ```
+    Dataset Chameleon:
+  
+    LINE: f1 = 0.5591
+    Deepwalk: f1 = 0.5120
+    Node2Vec: f1 = 0.4649
+  ```
+- 效果较好的是LINE算法，效果较差的是Node2Vec算法。
+
+#### 3.0.3 actor
+
+- 对于网络结构最为复杂的actor数据集，三种方法的正确率排列如下，其中LINE算法取两种相似度中较好的结果。
+  ```
+    Dataset Chameleon:
+
+    Deepwalk: f1 = 0.3011
+    LINE: f1 = 0.2980
+    Node2Vec: f1 = 0.2492
+  ```
+- 效果较好的是Deepwalk算法，效果较差的是Node2Vec算法。
+
+### 3.1 结果分析
+
+- 对于Deepwalk算法，由于进行随机序列生成，分类正确率的可能跨度较大，如果随机生成的序列能够较好的体现节点特征，则可以表现较好的性能。
+- 对于Word2Vec算法，在Deepwalk的随机基础上进行游走序列的限制生成。效果较Deepwalk整体较差的原因可能是超参数p与q对于不同的数据集需要进行不同的进一步调整。
+- 对于LINE算法，由于其定义的一阶、二阶相似度均是对结点的邻域进行计算，对于序列的生成更倾向于使用BFS的方法，对于图结构较为简单的数据可能较难准确提取其特征，在这样的数据集，如cora上表现较差，但在图结构较为复杂的数据集上相对表现较好。
+
+
 
