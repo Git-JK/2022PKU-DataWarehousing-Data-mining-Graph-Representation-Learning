@@ -35,6 +35,10 @@ class CoraDataset(DGLDataset):
         self.graph = dgl.graph((edges_src, edges_dst), num_nodes=2708)
         self.graph.ndata['feat'] = node_features
         self.graph.ndata['label']= node_labels
+        label_set = set()
+        for label in labels:
+            label_set.add(label)
+        self.num_labels = len(label_set)
         n_nodes = 2708
         train_mask = torch.zeros(n_nodes, dtype=torch.bool)
         val_mask = torch.zeros(n_nodes, dtype=torch.bool)
@@ -95,6 +99,10 @@ class ChameleonDataset(DGLDataset):
         self.graph = dgl.graph((edges_src, edges_dst), num_nodes=2277)
         self.graph.ndata['feat'] = node_features
         self.graph.ndata['label']= node_labels
+        label_set = set()
+        for label in labels:
+            label_set.add(label)
+        self.num_labels = len(label_set)
         n_nodes = 2277
         train_mask = torch.zeros(n_nodes, dtype=torch.bool)
         val_mask = torch.zeros(n_nodes, dtype=torch.bool)
@@ -155,6 +163,10 @@ class ActorDataset(DGLDataset):
         self.graph = dgl.graph((edges_src, edges_dst), num_nodes=7600)
         self.graph.ndata['feat'] = node_features
         self.graph.ndata['label']= node_labels
+        label_set = set()
+        for label in labels:
+            label_set.add(label)
+        self.num_labels = len(label_set)
         n_nodes = 7600
         train_mask = torch.zeros(n_nodes, dtype=torch.bool)
         val_mask = torch.zeros(n_nodes, dtype=torch.bool)
