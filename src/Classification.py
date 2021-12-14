@@ -1,3 +1,4 @@
+from tensorboardX import SummaryWriter
 from pandas._config import config
 import torch
 import torch.nn.functional as F
@@ -12,6 +13,7 @@ import os
 import time
 from torch.optim import AdamW
 from tqdm import tqdm
+from Dataset import NodesDataset
 
 from DatasetProcess import dataset
 from LineModel import Line
@@ -39,6 +41,8 @@ class NodeDataset(Dataset):
             self.nodes = np.array(graph.nodes()[val_mask])
         elif mode == "test":
             self.nodes = np.array(graph.nodes()[test_mask])
+        # elif mode == "all":
+        #     self.nodes = np.array(graph.nodes())
         self.label = []
         for i in self.nodes:
             self.label.append(df_label.values[i])
@@ -99,6 +103,7 @@ def evaluate(test_nodes_loader, model):
 
 
 def classification(config, dataset_name):
+    writer = SummaryWriter('./runs/deepwalkExps', comment="deepwalk")
     # classifier training process
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -115,12 +120,14 @@ def classification(config, dataset_name):
     train_nodes_dataset = NodeDataset(graph, "train")
     test_nodes_dataset = NodeDataset(graph, "test")
     val_nodes_dataset = NodeDataset(graph, "val")
+    # all_nodes_dataset = NodesDataset(graph, "all")
     # train_nodes_loader = DataLoader(train_nodes_dataset, batch_size=config.batch_size, shuffle=True, num_workers=4)
     # test_nodes_loader = DataLoader(test_nodes_dataset, batch_size=config.batch_size, shuffle=True, num_workers=4)
     # val_nodes_loader = DataLoader(val_nodes_dataset, batch_size=config.batch_size, shuffle=True, num_workers=4)
     train_nodes_loader = DataLoader(train_nodes_dataset, batch_size=config.batch_size, shuffle=True, num_workers=0)
     test_nodes_loader = DataLoader(test_nodes_dataset, batch_size=config.batch_size, shuffle=True, num_workers=0)
     val_nodes_loader = DataLoader(val_nodes_dataset, batch_size=config.batch_size, shuffle=True, num_workers=0)
+    # all_nodes_loader = DataLoader(all_nodes_dataset, batch_size=config.batch_size, shuffle=True, num_workers=0)
     
     model = NodeClassification(emb, num_class=config.num_class)
     model.to(device)
@@ -160,6 +167,14 @@ def classification(config, dataset_name):
                 
     f1 = evaluate(test_nodes_loader, model)
     print("Testing dataset: f1 = %.4f"%(f1))
+    # for i, (batch_nodes, batch_labels) in enumerate(all_nodes_loader):
+    #     batch_nodes = batch_nodes.to(device).long()
+    #     batch_labels = batch_labels.to(device).long()
+    #     model.eval()
+    #     logit = model(batch_nodes)
+    labels = graph.ndata['label']
+    writer.add_embedding(emb, metadata=labels, global_step=0, tag=dataset_name)
+        
 
 
 def line_classification(config, dataset_name, order=1):
@@ -257,12 +272,12 @@ if __name__ == "__main__":
     classification(config, "actor")
     # f1 = 0.3011
 
-    # config = ConfigClass("./out/cora/cora_deepwalk_ckpt", num_class=7)
-    # classification(config, "cora")
+    config = ConfigClass("./out/cora/cora_deepwalk_ckpt", num_class=7)
+    classification(config, "cora")
     # f1 = 0.6340
 
-    # config = ConfigClass("./out/chameleon/chameleon_deepwalk_ckpt")
-    # classification(config, "chameleon")
+    config = ConfigClass("./out/chameleon/chameleon_deepwalk_ckpt")
+    classification(config, "chameleon")
     # f1 = 0.5120
 
     # ---LINE Model Classification

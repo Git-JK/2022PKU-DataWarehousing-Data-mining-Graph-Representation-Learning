@@ -1,3 +1,4 @@
+from tensorboardX import SummaryWriter
 import time
 import os
 from model import GCN
@@ -21,6 +22,7 @@ def evaluate(model, features, labels, mask):
         return correct.item() * 1.0 / len(labels)
 
 def main(args, mode):
+    writer = SummaryWriter('runs/gcnExps', comment="GCN")
     data = dataset(args.dataset)
     graph = data[0]
     if args.gpu < 0:
@@ -89,6 +91,9 @@ def main(args, mode):
     torch.save(model.state_dict(), save_path)
     acc = evaluate(model, features, labels, test_mask)
     print("Test accuracy {:.2%}".format(acc))
+    model.eval()
+    embedding = model(features)
+    writer.add_embedding(embedding, metadata=labels, global_step=0, tag=args.dataset)
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="GCN")
