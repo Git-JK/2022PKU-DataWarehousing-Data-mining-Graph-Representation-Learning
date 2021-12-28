@@ -2,9 +2,10 @@ from tensorboardX import SummaryWriter
 import time
 import os
 from model import GCN
-from DatasetProcess2 import dataset
+from DatasetProcess import dataset
 from torch.nn import CrossEntropyLoss
 from torch.optim import Adam
+from sklearn import metrics
 import torch
 import torch.nn.functional as F
 import numpy as np
@@ -18,8 +19,9 @@ def evaluate(model, features, labels, mask):
         logits = logits[mask]
         labels = labels[mask]
         _, indices = torch.max(logits, dim=1)
+        f1_score = metrics.f1_score(indices, labels, average="macro")
         correct = torch.sum(indices == labels)
-        return correct.item() * 1.0 / len(labels)
+        return correct.item() * 1.0 / len(labels), f1_score
 
 def main(args, mode):
     writer = SummaryWriter('runs/gcnExps', comment="GCN")
@@ -81,23 +83,23 @@ def main(args, mode):
             if epoch >= 3:
                 dur.append(time.time() - t0)
             
-            acc = evaluate(model, features, labels, val_mask)
-            print("Epoch {:05d} | Time(s) {:.4f} | Loss {:.4f} | Accuracy {:.4f} | "
+            acc, f1_score = evaluate(model, features, labels, val_mask)
+            print("Epoch {:05d} | Time(s) {:.4f} | Loss {:.4f} | Accuracy {:.4f} | F1 score {:.4f} |"
                 "ETputs(KTEPS) {:.2f}". format(epoch, np.mean(dur), loss.item(),
-                                                acc, n_edges / np.mean(dur) / 1000))
+                                                acc, f1_score, n_edges / np.mean(dur) / 1000))
         
     print()
     save_path = "./hw3/out/" + args.dataset + "/" + args.dataset + "_gcn_ckpt"
     torch.save(model.state_dict(), save_path)
-    acc = evaluate(model, features, labels, test_mask)
-    print("Test accuracy {:.2%}".format(acc))
+    acc, f1_score = evaluate(model, features, labels, test_mask)
+    print("Test accuracy {:.2%} | F1 score {:.2%}".format(acc, f1_score))
     model.eval()
     embedding = model(features)
     writer.add_embedding(embedding, metadata=labels, global_step=0, tag=args.dataset)
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="GCN")
-    parser.add_argument("--dataset", type=str, default="cora", help="Dataset name ('cora', 'chameleon', 'actor').")
+    parser.add_argument("--dataset", type=str, default="actor", help="Dataset name ('cora', 'chameleon', 'actor').")
     parser.add_argument("--dropout", type=float, default=0.5, help="dropout probability")
     parser.add_argument("--gpu", type=int, default=-1, help="gpu")
     parser.add_argument("--lr", type=float, default=1e-2, help="learning rate")
@@ -105,7 +107,7 @@ if __name__ == "__main__":
     parser.add_argument("--n-hidden", type=int, default=16, help="number of hidden gcn units")
     parser.add_argument("--n-layers", type=int, default=1, help="number of hidden gcn layers")
     parser.add_argument("--weight-decay", type=float, default=5e-4, help="Weight of L2 loss")
-    parser.add_argument("--self-loop", action="store_true", help="graph self-loop (default=False)")
+    parser.add_argument("--self-loop", action="store_true", help="graph self-loop (default=True)")
     parser.set_defaults(self_loop=True)
     args = parser.parse_args()
     print(args)
