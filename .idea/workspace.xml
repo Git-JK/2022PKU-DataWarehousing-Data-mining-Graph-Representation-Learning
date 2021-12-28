@@ -20,8 +20,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="609bcef9-bd68-49e0-b1b4-ac76f82670ab" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/Graph-Representation-Learning.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Graph-Representation-Learning.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hw3/Graphsage/model.py" beforeDir="false" afterPath="$PROJECT_DIR$/hw3/Graphsage/model.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hw3/Graphsage/train_full.py" beforeDir="false" afterPath="$PROJECT_DIR$/hw3/Graphsage/train_full.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -95,6 +96,9 @@
       <module name="Graph-Representation-Learning" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
       <option name="SDK_HOME" value="" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/hw3/Graphsage" />
       <option name="IS_MODULE_SDK" value="true" />

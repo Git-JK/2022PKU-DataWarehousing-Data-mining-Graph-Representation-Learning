@@ -7,8 +7,11 @@ import dgl
 from dgl.data import register_data_args, load_data
 from model import GraphSAGE, evaluate
 from DatasetProcess2 import dataset
+from tensorboardX import SummaryWriter
+
 
 def main(args):
+    writer = SummaryWriter('../../runs/graphsageExps', comment="Graphsage")
     data = dataset(args.dataset)
     g = data[0]
     features = torch.tensor(g.ndata['feat'], dtype=torch.float)
@@ -66,22 +69,25 @@ def main(args):
         if epoch >= 3:
             dur.append(time.time() - t0)
 
-        acc = evaluate(model, g, features, labels, val_nid)
-        print("Epoch {:05d} | Time(s) {:.4f} | Loss {:.4f} | Accuracy {:.4f} | "
+        acc, f1_score = evaluate(model, g, features, labels, val_nid)
+        print("Epoch {:05d} | Time(s) {:.4f} | Loss {:.4f} | Accuracy {:.4f} | F1 score {:.4f} |"
               "ETputs(KTEPS) {:.2f}".format(epoch, np.mean(dur), loss.item(),
-                                            acc, n_edges / np.mean(dur) / 1000))
+                                            acc, f1_score, n_edges / np.mean(dur) / 1000))
 
     print()
-    acc = evaluate(model, g, features, labels, test_nid)
-    print("Test Accuracy {:.4f}".format(acc))
+    acc, f1_score = evaluate(model, g, features, labels, test_nid)
+    print("Test Accuracy {:.4f} | F1 score {:.2%}".format(acc, f1_score))
     save_path = "../out/" + args.dataset + "/" + args.dataset + "_graphsage_ckpt"
     torch.save(model.state_dict(), save_path)
     model.eval()
 
+    embedding = model(g, features)
+    writer.add_embedding(embedding, metadata=labels, global_step=0, tag=args.dataset)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='GraphSAGE')
-    parser.add_argument("--dataset", type=str, default="actor", help="cora or chameleon or actor")
+    parser.add_argument("--dataset", type=str, default="cora", help="cora or chameleon or actor")
     parser.add_argument("--dropout", type=float, default=0.5, help="dropout probability")
     parser.add_argument("--gpu", type=int, default=-1, help="gpu")
     parser.add_argument("--lr", type=float, default=1e-2, help="learning rate")

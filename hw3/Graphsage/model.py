@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from dgl.nn.pytorch.conv import SAGEConv
+from sklearn import metrics
 
 
 class GraphSAGE(nn.Module):
@@ -32,5 +33,6 @@ def evaluate(model, graph, features, labels, nid):
         logits = logits[nid]
         labels = labels[nid]
         _, indices = torch.max(logits, dim=1)
+        f1_score = metrics.f1_score(indices, labels, average="macro")
         correct = torch.sum(indices == labels)
-        return correct.item() * 1.0 / len(labels)
+        return correct.item() * 1.0 / len(labels), f1_score
