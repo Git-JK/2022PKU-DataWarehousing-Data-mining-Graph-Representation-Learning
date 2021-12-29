@@ -178,6 +178,7 @@ def classification(config, dataset_name):
 
 
 def line_classification(config, dataset_name, order=1):
+    writer = SummaryWriter('./runs/lineExps', comment="LINE")
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -252,6 +253,8 @@ def line_classification(config, dataset_name, order=1):
 
     f1 = evaluate(test_nodes_loader, model)
     print("Testing dataset: f1 = %.4f" % (f1))
+    labels = graph.ndata['label']
+    writer.add_embedding(emb, metadata=labels, global_step=0, tag=dataset_name)
 
 
 if __name__ == "__main__":
@@ -266,6 +269,7 @@ if __name__ == "__main__":
             self.save_path = save_path
             self.lossdata_path = lossdata_path
 
+    '''
     # ---Deepwalk Model Classification
     print("Deepwalk Model:")
     config = ConfigClass("./out/actor/actor_deepwalk_ckpt")
@@ -279,14 +283,15 @@ if __name__ == "__main__":
     config = ConfigClass("./out/chameleon/chameleon_deepwalk_ckpt")
     classification(config, "chameleon")
     # f1 = 0.5120
+    '''
 
     # ---LINE Model Classification
     print("LINE Model:")
 
     # 一阶相似度
-    print("First-order proximity：")
-    config = ConfigClass(save_path="./out/actor/actor_line_1_ckpt")
-    line_classification(config, "actor")
+    # print("First-order proximity：")
+    # config = ConfigClass(save_path="./out/actor/actor_line_1_ckpt")
+    # line_classification(config, "actor")
     # f1 = 0.2980
 
     # config = ConfigClass(save_path="./out/cora/cora_line_1_ckpt", num_class=7)
@@ -303,10 +308,10 @@ if __name__ == "__main__":
     line_classification(config, "actor", order=2)
     # f1 = 0.2936
 
-    # config = ConfigClass(save_path="./out/cora/cora_line_2_ckpt", num_class=7)
-    # line_classification(config, "cora", order=2)
+    config = ConfigClass(save_path="./out/cora/cora_line_2_ckpt", num_class=7)
+    line_classification(config, "cora", order=2)
     # f1 = 0.4925
 
-    # config = ConfigClass(save_path="./out/chameleon/chameleon_line_2_ckpt")
-    # line_classification(config, "chameleon", order=2)
+    config = ConfigClass(save_path="./out/chameleon/chameleon_line_2_ckpt")
+    line_classification(config, "chameleon", order=2)
     # f1 = 0.5591
