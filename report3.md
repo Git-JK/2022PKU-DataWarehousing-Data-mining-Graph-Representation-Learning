@@ -77,7 +77,7 @@ optional arguments:
           edata_schemes={})
       ```
 - 对GCN框架下的图结点表示和分类训练
-根据设置的隐藏层层数**n_hidden**,设置了**n_hidden**层**dgl**框架内置实现的**GraphConv**层，并根据设定的**dropout**进行默认**200 epochs**的训练
+  根据设置的隐藏层层数**n_hidden**,设置了**n_hidden**层**dgl**框架内置实现的**GraphConv**层，并根据设定的**dropout**进行默认**200 epochs**的训练
   
     - 用graph中的**train_mask**包含的结点作为训练数据，**val_mask**包含的结点作为每个训练epoch中的测试
     - 训练完后在**test_mask**包含的结点下进行分类测试，得到正确分类的比例**test accuracy、macro $F_1$ score**作为评测指标，下面从上到下分别为cora、chameleon、actor dataset下的**test accuracy、macro $F_1$ score**
@@ -144,7 +144,7 @@ optional arguments:
   GCN:        Test accuracy 79.20% | F1 score 79.06%
   GAT:        Test accuracy 77.40% | F1 score 77.53%
   GraphSAGE:  Test Accuracy 79.40% | F1 score 78.94%
-
+  
   Deepwalk:   f1 = 0.6340
   Node2Vec:   f1 = 0.6222
   LINE:       f1 = 0.4925
@@ -160,7 +160,7 @@ optional arguments:
   GCN:        Test accuracy 43.20% | F1 score 39.45%
   GAT:        Test accuracy 53.73% | F1 score 54.25%
   GraphSAGE:  Test Accuracy 42.76% | F1 score 34.67%
-
+  
   Deepwalk:   f1 = 0.5120
   Node2Vec:   f1 = 0.4649
   LINE:       f1 = 0.5591
@@ -176,7 +176,7 @@ optional arguments:
   GCN:        Test accuracy 23.90% | F1 score 8.19%
   GAT:        Test accuracy 24.12% | F1 score 12.63%
   GraphSAGE:  Test Accuracy 23.90% | F1 score 7.72%
-
+  
   Deepwalk:   f1 = 0.3011
   Node2Vec:   f1 = 0.2492
   LINE:       f1 = 0.2980
@@ -197,9 +197,9 @@ optional arguments:
     <th> GraphSAGE </th>
   </tr>
   <tr>
-    <td><img src="./images/cora_gcn.png" width=300 height=300 /></td>
-    <td><img src="./images/cora_gat.png" width=300 height=300 /></td>
-    <td><img src="./images/cora_graphsage.png" width=300 height=300 /></td>
+    <td><img src="./images/cora_gcn.png" width=200 height=200 /></td>
+    <td><img src="./images/cora_gat.png" width=200 height=200 /></td>
+    <td><img src="./images/cora_graphsage.png" width=200 height=200 /></td>
   </tr>
 </table>
 <table>
@@ -209,11 +209,12 @@ optional arguments:
     <th> LINE </th>
   </tr>
   <tr>
-    <td><img src="./images/cora_deepwalk.png" width=300 height=300 /></td>
-    <td><img src="./images/cora_node2vec.png" width=300 height=300 /></td>
-    <td><img src="./images/cora_line.png" width=300 height=300 /></td>
+    <td><img src="./images/cora_deepwalk.png" width=200 height=200 /></td>
+    <td><img src="./images/cora_node2vec.png" width=200 height=200 /></td>
+    <td><img src="./images/cora_line.png" width=200 height=200 /></td>
   </tr>
 </table>
+
 
 - 可以看到，对于表现较好的图神经网络部分，类与类之间有着较为清晰的界限，相较于浅层模型有更小的噪声与更好的聚类分离。由于集群的不稳定性和数据性质，部分点位于错误的颜色簇中。浅层模型则聚类分离不明显，准确定较差。
   
@@ -226,9 +227,9 @@ optional arguments:
     <th> GraphSAGE </th>
   </tr>
   <tr>
-    <td><img src="./images/chameleon_gcn.png" width=300 height=300 /></td>
-    <td><img src="./images/chameleon_gat.png" width=300 height=300 /></td>
-    <td><img src="./images/chameleon_graphsage.png" width=300 height=300 /></td>
+    <td><img src="./images/chameleon_gcn.png" width=200 height=200 /></td>
+    <td><img src="./images/chameleon_gat.png" width=200 height=200 /></td>
+    <td><img src="./images/chameleon_graphsage.png" width=200 height=200 /></td>
   </tr>
 </table>
 <table>
@@ -238,11 +239,12 @@ optional arguments:
     <th> LINE </th>
   </tr>
   <tr>
-    <td><img src="./images/chameleon_deepwalk.png" width=300 height=300 /></td>
-    <td><img src="./images/chameleon_node2vec.png" width=300 height=300 /></td>
-    <td><img src="./images/chameleon_line.png" width=300 height=300 /></td>
+    <td><img src="./images/chameleon_deepwalk.png" width=200 height=200 /></td>
+    <td><img src="./images/chameleon_node2vec.png" width=200 height=200 /></td>
+    <td><img src="./images/chameleon_line.png" width=200 height=200 /></td>
   </tr>
 </table>
+
 
 - chameleon数据集从结果来看，图神经网络与浅层模型的表现相似。浅层模型是游走类的模型，对网络中节点的周围游走结构进行学习，而作业三中的网络对于节点的多层邻居之间的消息传递进行学习。网络复杂度增加时，浅层模型不能较好的反应局部结构，图神经网络中的消息传递特征不明显，二者的准确率均下降。
   
@@ -255,9 +257,9 @@ optional arguments:
     <th> GraphSAGE </th>
   </tr>
   <tr>
-    <td><img src="./images/actor_gcn.png" width=300 height=300 /></td>
-    <td><img src="./images/actor_gat.png" width=300 height=300 /></td>
-    <td><img src="./images/actor_graphsage.png" width=300 height=300 /></td>
+    <td><img src="./images/actor_gcn.png" width=200 height=200 /></td>
+    <td><img src="./images/actor_gat.png" width=200 height=200 /></td>
+    <td><img src="./images/actor_graphsage.png" width=200 height=200 /></td>
   </tr>
 </table>
 <table>
@@ -267,16 +269,16 @@ optional arguments:
     <th> LINE </th>
   </tr>
   <tr>
-    <td><img src="./images/actor_deepwalk.png" width=300 height=300 /></td>
-    <td><img src="./images/actor_node2vec.png" width=300 height=300 /></td>
-    <td><img src="./images/actor_line.png" width=300 height=300 /></td>
+    <td><img src="./images/actor_deepwalk.png" width=200 height=200 /></td>
+    <td><img src="./images/actor_node2vec.png" width=200 height=200 /></td>
+    <td><img src="./images/actor_line.png" width=200 height=200 /></td>
   </tr>
 </table>
 
-- 可以看到，两种方法的准确率都较低。actor复杂度进一步提高，局部结构反而相较于信息传递方法有一定的优势。
-- <img src="./images/actor_gcn_3d.png" width=300 height=300 />
-- 以actor数据集、gcn方法的三维分类图为例，可以直观的看到，学习到的表示方法不能较好的进行聚类与分类。
 
+- 可以看到，两种方法的准确率都较低。actor复杂度进一步提高，局部结构反而相较于信息传递方法有一定的优势。
+- <img src="./images/actor_gcn_3d.png" width=600 height=600 />
+- 以actor数据集、gcn方法的三维分类图为例，可以直观的看到，学习到的表示方法不能较好的进行聚类与分类。
 
 
 
