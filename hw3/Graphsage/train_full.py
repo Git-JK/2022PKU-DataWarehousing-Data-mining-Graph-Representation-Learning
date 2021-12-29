@@ -11,7 +11,7 @@ from tensorboardX import SummaryWriter
 
 
 def main(args):
-    writer = SummaryWriter('../../runs/graphsageExps', comment="Graphsage")
+    writer = SummaryWriter('./runs/graphsageExps', comment="Graphsage")
     data = dataset(args.dataset)
     g = data[0]
     features = torch.tensor(g.ndata['feat'], dtype=torch.float)
@@ -77,7 +77,7 @@ def main(args):
     print()
     acc, f1_score = evaluate(model, g, features, labels, test_nid)
     print("Test Accuracy {:.4f} | F1 score {:.2%}".format(acc, f1_score))
-    save_path = "../out/" + args.dataset + "/" + args.dataset + "_graphsage_ckpt"
+    save_path = "./hw3/out/" + args.dataset + "/" + args.dataset + "_graphsage_ckpt"
     torch.save(model.state_dict(), save_path)
     model.eval()
 

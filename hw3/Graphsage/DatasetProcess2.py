@@ -17,18 +17,18 @@ class CoraDataset(DGLDataset):
         '''
         read in edges to get all src nodes and dst nodes, and read in features, labels, masks to form a DGLgraph
         '''
-        edges_data = pd.read_csv('../../dataset/cora/edge_list.csv')
+        edges_data = pd.read_csv('./dataset/cora/edge_list.csv')
         edges_src = torch.from_numpy(edges_data['src'].to_numpy())
         edges_dst = torch.from_numpy(edges_data['dst'].to_numpy())
         features = []
-        for line in open('../../dataset/cora/feature.txt', 'r').readlines():
+        for line in open('./dataset/cora/feature.txt', 'r').readlines():
             line = line.strip('\n').split(' ')
             for i in range(len(line)):
                 line[i] = int(line[i])
             features.append(line)
         node_features = torch.from_numpy(np.array(features))
         labels = []
-        for line in open('../../dataset/cora/label.txt', 'r').readlines():
+        for line in open('./dataset/cora/label.txt', 'r').readlines():
             line = int(line.strip('\n'))
             labels.append(line)
         node_labels = torch.from_numpy(np.array(labels))
@@ -44,15 +44,15 @@ class CoraDataset(DGLDataset):
         val_mask = torch.zeros(n_nodes, dtype=torch.bool)
         test_mask = torch.zeros(n_nodes, dtype=torch.bool)
         train_labels = []
-        for line in open('../../dataset/cora/train_nodes.txt', 'r').readlines():
+        for line in open('./dataset/cora/train_nodes.txt', 'r').readlines():
             line = int(line.strip('\n'))
             train_labels.append(line)
         val_labels = []
-        for line in open('../../dataset/cora/val_nodes.txt', 'r').readlines():
+        for line in open('./dataset/cora/val_nodes.txt', 'r').readlines():
             line = int(line.strip('\n'))
             val_labels.append(line)
         test_labels = []
-        for line in open('../../dataset/cora/test_nodes.txt', 'r').readlines():
+        for line in open('./dataset/cora/test_nodes.txt', 'r').readlines():
             line = int(line.strip('\n'))
             test_labels.append(line)
         for i in train_labels:
@@ -81,18 +81,18 @@ class ChameleonDataset(DGLDataset):
         '''
         read in edges to get all src nodes and dst nodes, and read in features, labels, masks to form a DGLgraph
         '''
-        edges_data = pd.read_csv('../../dataset/chameleon/edge_list.csv')
+        edges_data = pd.read_csv('./dataset/chameleon/edge_list.csv')
         edges_src = torch.from_numpy(edges_data['src'].to_numpy())
         edges_dst = torch.from_numpy(edges_data['dst'].to_numpy())
         features = []
-        for line in open('../../dataset/chameleon/feature.txt', 'r').readlines():
+        for line in open('./dataset/chameleon/feature.txt', 'r').readlines():
             line = line.strip('\n').split(' ')
             for i in range(len(line)):
                 line[i] = int(line[i])
             features.append(line)
         node_features = torch.from_numpy(np.array(features))
         labels = []
-        for line in open('../../dataset/chameleon/label.txt', 'r').readlines():
+        for line in open('./dataset/chameleon/label.txt', 'r').readlines():
             line = int(line.strip('\n'))
             labels.append(line)
         node_labels = torch.from_numpy(np.array(labels))
@@ -108,15 +108,15 @@ class ChameleonDataset(DGLDataset):
         val_mask = torch.zeros(n_nodes, dtype=torch.bool)
         test_mask = torch.zeros(n_nodes, dtype=torch.bool)
         train_labels = []
-        for line in open('../../dataset/chameleon/train_nodes.txt', 'r').readlines():
+        for line in open('./dataset/chameleon/train_nodes.txt', 'r').readlines():
             line = int(line.strip('\n'))
             train_labels.append(line)
         val_labels = []
-        for line in open('../../dataset/chameleon/val_nodes.txt', 'r').readlines():
+        for line in open('./dataset/chameleon/val_nodes.txt', 'r').readlines():
             line = int(line.strip('\n'))
             val_labels.append(line)
         test_labels = []
-        for line in open('../../dataset/chameleon/test_nodes.txt', 'r').readlines():
+        for line in open('./dataset/chameleon/test_nodes.txt', 'r').readlines():
             line = int(line.strip('\n'))
             test_labels.append(line)
         for i in train_labels:
@@ -145,18 +145,18 @@ class ActorDataset(DGLDataset):
         '''
         read in edges to get all src nodes and dst nodes, and read in features, labels, masks to form a DGLgraph
         '''
-        edges_data = pd.read_csv('../../dataset/actor/edge_list.csv')
+        edges_data = pd.read_csv('./dataset/actor/edge_list.csv')
         edges_src = torch.from_numpy(edges_data['src'].to_numpy())
         edges_dst = torch.from_numpy(edges_data['dst'].to_numpy())
         features = []
-        for line in open('../../dataset/actor/feature.txt', 'r').readlines():
+        for line in open('./dataset/actor/feature.txt', 'r').readlines():
             line = line.strip('\n').split(' ')
             for i in range(len(line)):
                 line[i] = int(line[i])
             features.append(line)
         node_features = torch.from_numpy(np.array(features))
         labels = []
-        for line in open('../../dataset/actor/label.txt', 'r').readlines():
+        for line in open('./dataset/actor/label.txt', 'r').readlines():
             line = int(line.strip('\n'))
             labels.append(line)
         node_labels = torch.from_numpy(np.array(labels))
@@ -172,15 +172,15 @@ class ActorDataset(DGLDataset):
         val_mask = torch.zeros(n_nodes, dtype=torch.bool)
         test_mask = torch.zeros(n_nodes, dtype=torch.bool)
         train_labels = []
-        for line in open('../../dataset/actor/train_nodes.txt', 'r').readlines():
+        for line in open('./dataset/actor/train_nodes.txt', 'r').readlines():
             line = int(line.strip('\n'))
             train_labels.append(line)
         val_labels = []
-        for line in open('../../dataset/actor/val_nodes.txt', 'r').readlines():
+        for line in open('./dataset/actor/val_nodes.txt', 'r').readlines():
             line = int(line.strip('\n'))
             val_labels.append(line)
         test_labels = []
-        for line in open('../../dataset/actor/test_nodes.txt', 'r').readlines():
+        for line in open('./dataset/actor/test_nodes.txt', 'r').readlines():
             line = int(line.strip('\n'))
             test_labels.append(line)
         for i in train_labels:

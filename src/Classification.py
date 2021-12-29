@@ -257,6 +257,78 @@ def line_classification(config, dataset_name, order=1):
     writer.add_embedding(emb, metadata=labels, global_step=0, tag=dataset_name)
 
 
+def node2vec_classification(config, dataset_name):
+    writer = SummaryWriter('./runs/node2vecExps', comment="node2vec")
+    # classifier training process
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    os.environ["CUDA_VISIBLE_DEVICES"] = config.gpu
+    os.environ["KERAS_BACKEND"] = "pytorch"
+    torch.backends.cudnn.benchmark = True
+
+    # param = torch.load(config.save_path)
+    param = torch.load(config.save_path, map_location='cpu')
+    # print(param)
+
+    emb = param['v_embeddings.weight']
+    graph = dataset(dataset_name)[0]
+    train_nodes_dataset = NodeDataset(graph, "train")
+    test_nodes_dataset = NodeDataset(graph, "test")
+    val_nodes_dataset = NodeDataset(graph, "val")
+
+    train_nodes_loader = DataLoader(train_nodes_dataset, batch_size=config.batch_size, shuffle=True, num_workers=0)
+    test_nodes_loader = DataLoader(test_nodes_dataset, batch_size=config.batch_size, shuffle=True, num_workers=0)
+    val_nodes_loader = DataLoader(val_nodes_dataset, batch_size=config.batch_size, shuffle=True, num_workers=0)
+
+    model = NodeClassification(emb, num_class=config.num_class)
+    model.to(device)
+    classifier_path = "./out/" + dataset_name + "/" + dataset_name + "_node2vec_classification_ckpt"
+    if os.path.exists(classifier_path):
+        # model.load_state_dict(torch.load(classifier_path))
+        model.load_state_dict(torch.load(classifier_path, map_location='cpu'))
+
+    else:
+        optimizer = AdamW(model.parameters(), lr=float(config.lr), betas=(0.9, 0.999), eps=1e-08, weight_decay=0.01,
+                          amsgrad=False)
+        loss_func = nn.BCEWithLogitsLoss()
+
+        start_time = time.time()
+        for epoch in range(config.epochs):
+            loss_total = []
+            top_loss = 100
+            model.train()
+            tqdm_bar = tqdm(train_nodes_loader, desc="Training epoch{epoch}".format(epoch=epoch))
+            for i, (batch_nodes, batch_labels) in enumerate(tqdm_bar):
+                batch_nodes = batch_nodes.to(device).long()
+                batch_labels = batch_labels.to(device).long()
+
+                model.zero_grad()
+                logit = model(batch_nodes)
+                probs = F.softmax(logit, dim=1)
+                loss = loss_func(probs, batch_labels.float())
+                loss.backward()
+                optimizer.step()
+
+                loss_total.append(loss.detach().item())
+            print("Training Epoch: %03d; loss = %.4f cost time  %.4f" % (
+            epoch, np.mean(loss_total), time.time() - start_time))
+            f1 = evaluate(val_nodes_loader, model)
+            print("Validation Epoch: %03d; f1 = %.4f" % (epoch, f1))
+            if top_loss > np.mean(loss_total):
+                top_loss = np.mean(loss_total)
+                torch.save(model.state_dict(), classifier_path)
+
+    f1 = evaluate(test_nodes_loader, model)
+    print("Testing dataset: f1 = %.4f" % (f1))
+    # for i, (batch_nodes, batch_labels) in enumerate(all_nodes_loader):
+    #     batch_nodes = batch_nodes.to(device).long()
+    #     batch_labels = batch_labels.to(device).long()
+    #     model.eval()
+    #     logit = model(batch_nodes)
+    labels = graph.ndata['label']
+    writer.add_embedding(emb, metadata=labels, global_step=0, tag=dataset_name)
+
+
 if __name__ == "__main__":
     # train and test classifier on all datasets
     class ConfigClass():
@@ -286,7 +358,7 @@ if __name__ == "__main__":
     '''
 
     # ---LINE Model Classification
-    print("LINE Model:")
+    # print("LINE Model:")
 
     # 一阶相似度
     # print("First-order proximity：")
@@ -303,15 +375,32 @@ if __name__ == "__main__":
     # f1 = 0.5169
 
     # 二阶相似度
-    print("Second-order proximity：")
-    config = ConfigClass(save_path="./out/actor/actor_line_2_ckpt")
-    line_classification(config, "actor", order=2)
-    # f1 = 0.2936
-
-    config = ConfigClass(save_path="./out/cora/cora_line_2_ckpt", num_class=7)
-    line_classification(config, "cora", order=2)
-    # f1 = 0.4925
-
-    config = ConfigClass(save_path="./out/chameleon/chameleon_line_2_ckpt")
-    line_classification(config, "chameleon", order=2)
+    # print("Second-order proximity：")
+    # config = ConfigClass(save_path="./out/actor/actor_line_2_ckpt")
+    # line_classification(config, "actor", order=2)
+    # # f1 = 0.2936
+    #
+    # config = ConfigClass(save_path="./out/cora/cora_line_2_ckpt", num_class=7)
+    # line_classification(config, "cora", order=2)
+    # # f1 = 0.4925
+    #
+    # config = ConfigClass(save_path="./out/chameleon/chameleon_line_2_ckpt")
+    # line_classification(config, "chameleon", order=2)
     # f1 = 0.5591
+
+
+    # # ---Node2Vec Model Classification
+    # print("Node2Vec Model:")
+    # config = ConfigClass("./out/actor/actor_node2vec_ckpt")
+    # node2vec_classification(config, "actor")
+    # # f1 = 0.2492
+    #
+    # config = ConfigClass("./out/cora/cora_node2vec_ckpt", num_class=7)
+    # node2vec_classification(config, "cora")
+    # # f1 = 0.6222
+    #
+    # config = ConfigClass("./out/chameleon/chameleon_node2vec_ckpt")
+    # node2vec_classification(config, "chameleon")
+    # # f1 = 0.4946
+
+
