@@ -99,7 +99,7 @@ def main(args, mode):
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="GCN")
-    parser.add_argument("--dataset", type=str, default="actor", help="Dataset name ('cora', 'chameleon', 'actor').")
+    parser.add_argument("--dataset", type=str, default="cora", help="Dataset name ('cora', 'chameleon', 'actor').")
     parser.add_argument("--dropout", type=float, default=0.5, help="dropout probability")
     parser.add_argument("--gpu", type=int, default=-1, help="gpu")
     parser.add_argument("--lr", type=float, default=1e-2, help="learning rate")

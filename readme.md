@@ -1,1 +1,3 @@
-this is readme
+# README
+
+这是2022PKU数据仓库图数据挖掘相关大作业，主要是对图浅层模型(deepwalk,node2vec,line)和基础的图神经网络(GCN,GAT,GraphSage)的复现和效果对比，src中是图浅层网络的模型，hw3中是图神经网络模型，paper reading notes中是对一些图神经网络基础论文的notes和综述，有需要可以自行查看hw1，hw2，hw3的report，里面有使用方法和作业总结汇报，images中存了用tensorboardX画出来的各个model对结点的embedding的可视化结果。
